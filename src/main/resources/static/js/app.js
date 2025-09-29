@@ -17,8 +17,28 @@ const BlueprintApi = (function (){
             .catch(err => errorCb && errorCb(err.message));
     }
 
-    function getAll(author, callback, errorCb) {
-        handleResponse(fetch(baseUrl), callback, errorCb);
+    function updateBlueprintsTable(){
+        if(!selectedAuthor) {
+            alert("Seleccione un autor");
+            return;
+        }
+        getByAuthor(selectedAuthor, (data) => {
+            $("#blueprintTable tbody").empty();
+
+            blueprints.map(bp => {
+                $("#blueprintTable tbody").append(`
+                <tr>
+                    <td>${bp.name}</td>
+                    <td>${bp.name}</td>
+                </tr>`);
+
+            });
+            let totlPoints = blueprints.reduce((sum, bp) => sum + bp.points, 0);
+
+            $("#totalPoints").text(totlPoints);
+        }, (err) => {
+            console.error("Error obteniendo planos:", err);
+            });
     }
 
     function getByAuthor(author, callback, errorCb) {
@@ -31,6 +51,19 @@ const BlueprintApi = (function (){
         }, errorCb);
     }
 
+    function consultAuthor() {
+        var author = $("#author").val();
+        setSelectedAuthor(author);
+        $("#author-name").text(author);
+        updateBlueprintsTable();
+
+    }
+
+
+    function getAll(author, callback, errorCb) {
+        handleResponse(fetch(baseUrl), callback, errorCb);
+    }
+
     function setSelectedAuthor(author){
         selectedAuthor = author;
     }
@@ -40,14 +73,23 @@ const BlueprintApi = (function (){
     }
 
 
+
+
     return {
         getAll,
         getByAuthor,
         setSelectedAuthor,
-        getBlueprints
+        getBlueprints,
+        updateBlueprintsTable,
+        consultAuthor
+
     };
 
 
 
 })();
 
+$(function() {
+    $("#btn-consult").on("click", ()=>
+        BlueprintApi.consultAuthor());
+});

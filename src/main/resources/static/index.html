@@ -5,21 +5,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="/webjars/jquery/jquery.min.js"></script>
+    <!-- jQuery -->
+    <script src="/webjars/jquery/3.1.0/jquery.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Bootstrap JS -->
     <script src="/webjars/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet"
-          href="/webjars/bootstrap/3.3.7/css/bootstrap.min.css" />
 </head>
 <body>
 
 <h1>Blueprints</h1>
 <div>
   <input type="text" id="author" placeholder="Nombre del autor">
-  <button class="boton-de-busqueda">GetBlueprints</button>
+    <button id="btn-consulta">GetBlueprints</button>
 </div>
 <div>
-    <h4>Blueprints by Author: </h4>
-  <table class ="blueprint-table">
+    <p> <span id = "author-name"></span> blueprints:</p>
+  <table id="blueprintsTable">
       <tr>
             <th>Blueprint Name</th>
             <th>Number of points</th>
@@ -46,7 +50,7 @@
 </div>
 
 <div>
- <a>Total User Points:</a>
+ <p>Total User Points: <span id = "totalPoints">0</span></p>
 </div>
 </body>
 
