@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
  */
 
 @RestController
-@RequestMapping("blueprintsApi")
+@RequestMapping("/blueprintsApi/blueprints")
 public class BlueprintAPIController {
 
     @Autowired
@@ -38,7 +38,7 @@ public class BlueprintAPIController {
     /**
      * GET /blueprints get all plans
      */
-    @RequestMapping("blueprints")
+    @RequestMapping
     @GetMapping
     public ResponseEntity<?> getAllBlueprints() {
         try {
@@ -55,7 +55,7 @@ public class BlueprintAPIController {
     /**
      * GET /blueprints/{author} Get all plans from a specific author
      */
-    @GetMapping("/blueprints/{author}")
+    @GetMapping("{author}")
     public ResponseEntity<?> getBlueprintsByAuthor(@PathVariable String author) {
         try {
             Set<Blueprint> blueprints = blueprintsServices.getBlueprintsByAuthor(author);
@@ -75,7 +75,7 @@ public class BlueprintAPIController {
     /**
      * GET /blueprints/{author}/{bpname} Get a specific plan
      */
-    @GetMapping("/blueprints/{author}/{bpname}")
+    @GetMapping("{author}/{bpname}")
     public ResponseEntity<?> getBlueprint(@PathVariable String author, @PathVariable String bpname) {
         try {
             Blueprint blueprint = blueprintsServices.getBlueprint(author, bpname);
@@ -92,7 +92,7 @@ public class BlueprintAPIController {
     /**
      * POST /blueprints Create a new plan
      */
-    @PostMapping("/blueprints")
+    @PostMapping
     public ResponseEntity<?> createBlueprint(@RequestBody Blueprint blueprint) {
         try {
             blueprintsServices.addNewBlueprint(blueprint);
@@ -106,7 +106,7 @@ public class BlueprintAPIController {
     /**
      * PUT /blueprints/{author}/{bpname} Update an existing plan
      */
-    @PutMapping("/blueprints/{author}/{bpname}")
+    @PutMapping("{author}/{bpname}")
     public ResponseEntity<?> updateBlueprint(@PathVariable String author,
                                              @PathVariable String bpname,
                                              @RequestBody Blueprint blueprint) {

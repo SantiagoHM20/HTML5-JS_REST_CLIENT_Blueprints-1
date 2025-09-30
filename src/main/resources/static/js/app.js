@@ -1,95 +1,93 @@
 const BlueprintApi = (function (){
-    const baseUrl = "/blueprintsApi/blueprints/";
-
+    const baseUrl = "/blueprintsApi/blueprints"; // sin slash final
     let selectedAuthor = null;
     let blueprints = [];
-    function handleResponse(promise, callback, errorCb){
-        promise
-            .then(r => {
-                if (!r.ok) {
-                    return r.text().then(t => {
-                        throw new Error(t || ("HTTP" + r.status))
-                    });
-                }
-                return r.status == 204 ? null : r.json();
-            })
-            .then(data => callback && callback(data))
-            .catch(err => errorCb && errorCb(err.message));
+    let authorsCache = [];
+
+    function handleResponse(promise, ok, fail){
+        promise.then(r=>{
+            if(!r.ok) return r.text().then(t=>{throw new Error(t||("HTTP"+r.status));});
+            return r.status===204?null:r.json();
+        }).then(d=>ok&&ok(d))
+            .catch(e=>fail&&fail(e.message));
     }
 
-    function updateBlueprintsTable(){
-        if(!selectedAuthor) {
-            alert("Seleccione un autor");
+    function getAll(callback, errorCb){
+        handleResponse(fetch(baseUrl), callback, errorCb);
+    }
+
+    function loadAuthors(){
+        if(authorsCache.length){
+            renderAuthors(authorsCache);
             return;
         }
-        getByAuthor(selectedAuthor, (data) => {
-            $("#blueprintTable tbody").empty();
-
-            blueprints.map(bp => {
-                $("#blueprintTable tbody").append(`
-                <tr>
-                    <td>${bp.name}</td>
-                    <td>${bp.name}</td>
-                </tr>`);
-
-            });
-            let totlPoints = blueprints.reduce((sum, bp) => sum + bp.points, 0);
-
-            $("#totalPoints").text(totlPoints);
-        }, (err) => {
-            console.error("Error obteniendo planos:", err);
-            });
+        getAll(data=>{
+            const set = new Set(data.map(bp=>bp.author));
+            authorsCache = Array.from(set).sort();
+            renderAuthors(authorsCache);
+        }, console.error);
     }
 
-    function getByAuthor(author, callback, errorCb) {
-        handleResponse(fetch(`${baseUrl}/${encodeURIComponent(author)}`), (data) => {
-            blueprints = data.map(bp => ({
-                name: bp.name,
-                points: bp.points.length
-            }));
+    function renderAuthors(list){
+        const dl = document.getElementById("authorsList");
+        dl.innerHTML = "";
+        list.forEach(a=>{
+            const opt=document.createElement("option");
+            opt.value=a;
+            dl.appendChild(opt);
+        });
+    }
+
+    function getByAuthor(author, callback, errorCb){
+        handleResponse(fetch(`${baseUrl}/${encodeURIComponent(author)}`), data=>{
+            blueprints = data.map(bp=>({name:bp.name, points:bp.points.length}));
             callback && callback(data);
         }, errorCb);
     }
 
-    function consultAuthor() {
-        var author = $("#author").val();
-        setSelectedAuthor(author);
+    function updateBlueprintsTable(){
+        if(!selectedAuthor){ alert("Seleccione un autor"); return; }
+
+        getByAuthor(selectedAuthor, (data)=>{
+            const tbody = $("#blueprintTable tbody");
+            tbody.empty();
+
+            if (blueprints.length === 0) {
+                tbody.append('<tr><td colspan="3">No se encontraron planos para este autor.</td></tr>');
+            } else {
+                blueprints.forEach(bp=>{
+                    tbody.append(`
+                      <tr>
+                        <td>${bp.name}</td>
+                        <td>${bp.points}</td>
+                        <td><button class="open-btn" data-bp="${bp.name}">Open</button></td>
+                      </tr>
+                    `);
+                });
+            }
+            $("#totalPoints").text(blueprints.reduce((sum, bp) => sum + bp.points, 0));
+        }, (errorMsg) => {
+            $("#blueprintTable tbody").empty();
+            $("#totalPoints").text(0);
+            alert("Error al cargar los planos: " + errorMsg);
+        });
+    }
+
+    function consultAuthor(){
+        const author = $("#author").val();
+        if(!author) return;
+        selectedAuthor = author;
         $("#author-name").text(author);
         updateBlueprintsTable();
-
     }
-
-
-    function getAll(author, callback, errorCb) {
-        handleResponse(fetch(baseUrl), callback, errorCb);
-    }
-
-    function setSelectedAuthor(author){
-        selectedAuthor = author;
-    }
-
-    function getBlueprints(){
-        return blueprints;
-    }
-
-
-
 
     return {
-        getAll,
-        getByAuthor,
-        setSelectedAuthor,
-        getBlueprints,
-        updateBlueprintsTable,
+        loadAuthors,
         consultAuthor
-
     };
-
-
-
 })();
 
-$(function() {
-    $("#btn-consult").on("click", ()=>
-        BlueprintApi.consultAuthor());
+$(function(){
+    $("#author").on("focus", ()=>BlueprintApi.loadAuthors());
+    $("#btn-consult").on("click", ()=>BlueprintApi.consultAuthor());
 });
