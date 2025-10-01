@@ -1,19 +1,18 @@
+const apiModule = apiclient; //apiclient o apimock
+
 const BlueprintApi = (function (){
-    const baseUrl = "/blueprintsApi/blueprints"; // sin slash final
+
     let selectedAuthor = null;
     let blueprints = [];
     let authorsCache = [];
 
-    function handleResponse(promise, ok, fail){
-        promise.then(r=>{
-            if(!r.ok) return r.text().then(t=>{throw new Error(t||("HTTP"+r.status));});
-            return r.status===204?null:r.json();
-        }).then(d=>ok&&ok(d))
-            .catch(e=>fail&&fail(e.message));
-    }
-
     function getAll(callback, errorCb){
-        handleResponse(fetch(baseUrl), callback, errorCb);
+        if(apiModule === apimock){
+            const mockAuthors = ["johnconnor", "maryweyland", "SantiagoHurtado", "MayerllySuarez"];
+            callback(mockAuthors);
+        } else {
+            apiclient.getAllAuthors(callback, errorCb);
+        }
     }
 
     function loadAuthors(){
@@ -22,8 +21,7 @@ const BlueprintApi = (function (){
             return;
         }
         getAll(data=>{
-            const set = new Set(data.map(bp=>bp.author));
-            authorsCache = Array.from(set).sort();
+            authorsCache = data.sort();
             renderAuthors(authorsCache);
         }, console.error);
     }
@@ -39,10 +37,16 @@ const BlueprintApi = (function (){
     }
 
     function getByAuthor(author, callback, errorCb){
-        handleResponse(fetch(`${baseUrl}/${encodeURIComponent(author)}`), data=>{
+        apiModule.getBlueprintsByAuthor(author, (data)=>{
+            // Para apimock
+            if(!data) {
+                blueprints = [];
+                callback && callback([]);
+                return;
+            }
             blueprints = data.map(bp=>({name:bp.name, points:bp.points.length}));
             callback && callback(data);
-        }, errorCb);
+        });
     }
 
     function updateBlueprintsTable(){
@@ -52,24 +56,32 @@ const BlueprintApi = (function (){
             const tbody = $("#blueprintTable tbody");
             tbody.empty();
 
-            if (blueprints.length === 0) {
+            if (!data || data.length === 0) {
                 tbody.append('<tr><td colspan="3">No se encontraron planos para este autor.</td></tr>');
+                blueprints = [];
             } else {
+                blueprints = data.map(bp=>({name:bp.name, points:bp.points.length}));
+
                 blueprints.forEach(bp=>{
                     tbody.append(`
                       <tr>
                         <td>${bp.name}</td>
-                        <td>${bp.points}</td>
-                        <td><button class="open-btn" data-bp="${bp.name}">Open</button></td>
+                        <td class="text-center">${bp.points}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-success open-btn" data-bp="${bp.name}">
+                                <span class="glyphicon glyphicon-eye-open"></span> Open
+                            </button>
+                        </td>
                       </tr>
                     `);
                 });
+
+                $(".open-btn").off('click').on("click", function() {
+                    const blueprintName = $(this).data("bp");
+                    BlueprintApi.drawLineSegments(blueprintName);
+                });
             }
             $("#totalPoints").text(blueprints.reduce((sum, bp) => sum + bp.points, 0));
-        }, (errorMsg) => {
-            $("#blueprintTable tbody").empty();
-            $("#totalPoints").text(0);
-            alert("Error al cargar los planos: " + errorMsg);
         });
     }
 
@@ -81,9 +93,56 @@ const BlueprintApi = (function (){
         updateBlueprintsTable();
     }
 
+    function drawLineSegments(blueprintName){
+        if(!selectedAuthor){
+            alert("Seleccione un autor");
+            return;
+        }
+        apiModule.getBlueprintsByNameAndAuthor(selectedAuthor, blueprintName, (blueprint) => {
+            if(!blueprint){
+                alert("Blueprint not found");
+                return;
+            }
+
+            const canvas = $("#myCanvas")[0];
+            const ctx = canvas.getContext("2d");
+
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Actualizar nombre del plano
+            $("#blueprint-name").text(blueprintName);
+
+            // Dibujar puntos y líneas
+            if(blueprint.points && blueprint.points.length > 0){
+                ctx.beginPath();
+                ctx.strokeStyle = "#2E7D32";
+                ctx.lineWidth = 2;
+                ctx.fillStyle = "#FF5722";
+
+                // Dibujar líneas
+                ctx.beginPath();
+                ctx.moveTo(blueprint.points[0].x, blueprint.points[0].y);
+
+                for(let i = 1; i < blueprint.points.length; i++){
+                    ctx.lineTo(blueprint.points[i].x, blueprint.points[i].y);
+                }
+                ctx.stroke();
+
+                // Dibujar puntos
+                blueprint.points.forEach((p) => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+            }
+        });
+    }
+
     return {
         loadAuthors,
-        consultAuthor
+        consultAuthor,
+        drawLineSegments
     };
 })();
 
