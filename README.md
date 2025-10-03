@@ -111,6 +111,7 @@
    <button id="btn-consult" class="btn btn-primary">GetBlueprints</button>
    ```
 7. Test the application: start the server, open the HTML5/JavaScript app, and verify that entering an existing author loads their list of blueprints.
+   
    ![Initial front.png](img/Initial%20front.png)
 ---
 
