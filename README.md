@@ -4,6 +4,7 @@
 ## **Author**
 
 - **Santiago Hurtado Martínez** [SantiagoHM20](https://github.com/SantiagoHM20) 
+- **Mayerlly Suárez Correa** [mayerllyyo](https://github.com/mayerllyyo)
 
 ## Building a 'Thick' Client with a REST API, HTML5, JavaScript, and CSS3. Part I.  
 
@@ -80,6 +81,11 @@
 ## Front-End – Logic  
 
 1. Create a JavaScript Module to act as a controller, maintaining state and providing the operations required by the view. Use the [JavaScript Module Pattern](https://toddmotto.com/mastering-the-module-pattern/), and create the module in `static/js/app.js`.  
+   ``` javascript
+   const BlueprintApi = (function (){
+      ...
+   })();
+   ```
 
 2. Copy the provided module (`apimock.js`) into the same path as the newly created module. Add more blueprints (with more points) for the hardcoded authors in the file.  
 
@@ -100,22 +106,51 @@
     * Iterates over this list and, using jQuery, appends `<tr>` elements with corresponding `<td>`s into the HTML table.  
     * Uses `reduce` to calculate the total number of points and updates the respective `<div>` in the DOM using jQuery.  
 
-6. Bind this operation to the 'on-click' event of the query button in the page.  
-
-7. Test the application: start the server, open the HTML5/JavaScript app, and verify that entering an existing author loads their list of blueprints.  
-
+6. Bind this operation to the 'on-click' event of the query button in the page.
+   ```html
+   <button id="btn-consult" class="btn btn-primary">GetBlueprints</button>
+   ```
+7. Test the application: start the server, open the HTML5/JavaScript app, and verify that entering an existing author loads their list of blueprints.
+   ![Initial front.png](img/Initial%20front.png)
 ---
 
 ## For Next Week  
 
 8. Add a [Canvas element](https://www.w3schools.com/html/html5_canvas.asp) to the page with its own identifier. Ensure its dimensions are suitable (not too large, leaving space for other components, but large enough to draw the blueprints).  
-
+    ```html
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+    ```  
 9. Add a public operation to `app.js` that, given an author and one of their blueprint names as parameters, calls `getBlueprintsByNameAndAuthor` from `apimock.js` with a _callback_ that:  
     * Retrieves the blueprint’s points and consecutively draws line segments using [HTML5 Canvas and 2DContext](https://www.w3schools.com/html/tryit.asp?filename=tryhtml5_canvas_tut_path).  
-    * Updates (with jQuery) the `<div>` that displays the name of the currently drawn blueprint (add this `<div>` to the DOM if it doesn’t exist).  
-
+   * Updates (with jQuery) the `<div>` that displays the name of the currently drawn blueprint (add this `<div>` to the DOM if it doesn’t exist).  
+     
+   ```javascript
+     getBlueprintsByNameAndAuthor: function(authname, bpname, callback){
+       ...
+     }
+   ```
 10. Update the rows generated in step 5 so that each includes a button in the last column, with a click event bound to the operation above (passing the corresponding names as parameters).  
+    
+   ```javascript
+   $(".open-btn").off('click').on("click", function() {
+    const blueprintName = $(this).data("bp");
+    BlueprintApi.drawLineSegments(blueprintName);
+    }
+   ```
+11. Verify that the application now allows you to view the plans of a car and graph the selected one.
 
-11. Verify that the application now allows querying an author’s blueprints and drawing the selected one.  
+   ![front_without_style.png](img/front_without_style.png)
+12. Once the application is working (front-end only), create a module (called 'apiclient') that has the same operations as 'apimock', but uses real data retrieved from the REST API. To do this, review [how to make GET requests with jQuery](https://api.jquery.com/jquery.get/), and how the callback scheme is handled in this context.
+    
+   ```javascript
+   var apiclient = (function(){
+    ...
+    })();
+   ```
+13. Modify the app.js code so that it's possible to switch between the 'apimock' and the 'apiclient' with just one line of code.
 
-12. Once the (front-end only) application works, create a new modu
+   ```javascript
+   const apiModule = apiclient;
+   ```
+14. Review the [Bootstrap style documentation and examples](https://v4-alpha.getbootstrap.com/examples/) (already included in the exercise), and add the necessary elements to the page to make it more attractive and closer to the mock example given at the beginning of the statement.
+   ![final_front.png](img/final_front.png)
